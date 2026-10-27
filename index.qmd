@@ -1,0 +1,213 @@
+---
+title: "Tarea-02: Análisis de Precipitación"
+author: "Dennier Chávez Garro"
+format: html
+lang: es 
+toc: true
+embed-resources: true
+---
+
+# Introducción
+
+La ciudad de Liberia, en la provincia de Guanacaste, ubicada en la región Pacífico Norte de Costa Rica, presenta un alta varibilidad climática que la hace particularmente vulnerable a fenómenos meteorológicos extremos. Durante la época lluviosa, la influencia de ondas tropicales, sistemas de baja presión y huracanes genera precipitaciones de alta intensidad que frecuentemente superan la capacidad de infiltración del suelo y el caudal máximo de diseño de las infraestructuras de drenaje existentes. Esta situación provoca desbordamientos en los cauces, generando inundaciones que afectan severamente a las comunidades locales, la infraestructura civil y las actividades agrícolas.
+
+Adicional a los efectos sobre el territorio provocados por las lluvias, se encuentra la falta de planificación urbana, que contribuye a la construcción de nuevos asentamientos, incluyendo complejos residenciales de alto costo en zonas limítrofes con ríos.
+
+En este contexto, el presente análisis se centra en la evaluación de los datos de precipitación obtenidos del conjunto de datos CHIRPS (Climate Hazards Group InfraRed Precipitation with Station data), que combina información satelital y de estaciones meteorológicas para proporcionar estimaciones de la precipitación diaria . El objetivo es identificar patrones de precipitación, evaluar la variabilidad temporal y espacial, y generar visualizaciones que faciliten la comprensión de los riesgos asociados a eventos extremos de lluvia en Liberia.
+
+En este documento se presentan los resultados del análisis de precipitación, incluyendo la visualización de la precipitación diaria, la temperatura media diaria y la curva masa de precipitación acumulada. Se pretende dar respuesta a tres interrogantes:
+
+1.  ¿Cuál es la distribución temporal de la precipitación diaria en Liberia durante el periodo de enero a septiembre de 2026?
+2.  ¿Cómo se comporta la temperatura media diaria en el mismo periodo y qué relación tiene con la precipitación?
+3.  ¿Cual es el comportamiento de la precipitación acumulada a lo largo del tiempo y cómo se puede representar mediante una curva masa interactiva?
+
+# Carga de bibliotecas
+
+```{r}
+#| label: carga-bibliotecas
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(plotly)
+library(DT)
+library(scales)
+```
+
+# Importación del conjunto de datos
+
+```{r}
+#| label: datos_precipitacion
+#| echo: true
+#| message: false
+
+precipitacion <- read_csv("https://raw.githubusercontent.com/dennierchavez/tarea_2/refs/heads/main/CHIRPS.csv")
+glimpse(precipitacion)
+summary(precipitacion)
+precipitacion
+precipitacion <- precipitacion %>%
+  mutate(
+    fecha = as.Date(date),
+    mes = floor_date(date, "month"))
+```
+
+# DT
+
+```{r}
+#| label: DT-1
+#| echo: true
+#| message: false
+
+precipitacion |>
+  datatable(
+    rownames = FALSE,
+    options = list(
+      pageLength = 10, 
+      autoWidth = TRUE,
+      language = list(url = "https://cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json")),
+    caption = htmltools::tags$caption(
+      style = 'caption-side: top; text-align: center; font-weight: bold;',
+      'Tabla 1: Precipitación Diaria (CHIRPS) - Enero a Septiembre 2026'
+    )
+  )
+
+```
+
+# Graficos
+
+## Figura 1. Precipitación diaria para el periodo de enero a septiembre de 2026
+
+```{r}
+#| label: primer gráfico
+#| message: false
+#| warning: false
+
+grafico_diario <- ggplot(precipitacion, aes(x = date, y = precipitation)) +
+  geom_col(fill = "blue", width = 0.8) +
+  scale_x_date(
+    date_breaks = "1 month", 
+    date_labels = "%b %Y",
+    expand = c(0.01, 0.01)
+  ) +
+  labs(
+    title = "Precipitación Diaria (CHIRPS) - Enero a Septiembre 2026",
+    subtitle = paste("Acumulado del periodo:", round(sum(precipitacion$precipitation, na.rm = TRUE), 1), "mm"),
+    x = "Fecha",
+    y = "Precipitación (mm/día)",
+    caption = "Fuente: Datos CHIRPS"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+
+grafico_diario
+```
+
+Tal como se observa en el gráfico anterior, la precipitación diaria en Liberia durante el periodo de enero de 2026 a septiembre de 2026 muestra una variabilidad significativa, con picos de precipitación que reflejan eventos de lluvia intensa. La acumulación total de precipitación durante este periodo asciende a un valor de 697 mm, lo que indica la presencia de condiciones climáticas propicias para inundaciones y otros fenómenos asociados a lluvias extremas.
+
+## Figura 2. Comportamiento de la temperatura media para el periodo de enero a septiembre de 2026
+
+```{r}
+#| label: segundo gráfico
+#| message: false
+#| warning: false
+
+grafico_diario_tmean <- ggplot(precipitacion, aes(x = date, y = tmean)) +
+  geom_col(fill = "orange", width = 0.8) +
+  scale_x_date(
+    date_breaks = "1 month", 
+    date_labels = "%b %Y",
+    expand = c(0.01, 0.01))+
+labs(
+    title ="Temperatura Media Diaria (CHIRPS) - Enero a Septiembre 2026",
+    x = "Fecha",
+    y = "Temperatura media diaria (C)",
+    caption = "Fuente: Datos CHIRPS"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+grafico_diario_tmean
+
+```
+
+A partir del gráfico anterior, se observa que la temperatura media diaria en Liberia durante el periodo de enero a septiembre de 2026 presenta una variabilidad moderada, con valores que oscilan entre los 20 y 30 grados Celsius. Esta variación refleja las condiciones climáticas típicas de la región, donde las temperaturas son generalmente cálidas durante todo el año.
+
+## Figura 3. Comportamiento de la precipitación acumulada (curva masa) para el periodo de enero a septiembre de 2026
+
+```{r}
+
+# 1. Cargar datos y calcular la precipitación acumulada (curva masa)
+precipitacion <- read_csv("https://raw.githubusercontent.com/dennierchavez/tarea_2/refs/heads/main/CHIRPS.csv", show_col_types = FALSE) %>%
+  mutate(date = as.Date(date)) %>%
+  arrange(date) %>%
+  mutate(
+    precip_acumulada = cumsum(precipitation),
+    # Construir etiqueta emergente con formato en español para la estética 'text'
+    etiqueta_tooltip = paste0(
+      "<b>Fecha:</b> ", format(date, "%d/%m/%Y"), "<br>",
+      "<b>Precipitación diaria:</b> ", number(precipitation, accuracy = 0.01, decimal.mark = ",", big.mark = "."), " mm<br>",
+      "<b>Precipitación acumulada:</b> ", number(precip_acumulada, accuracy = 0.01, decimal.mark = ",", big.mark = "."), " mm"
+    )
+  )
+
+# 2. Crear el gráfico base en ggplot2 incluyendo la estética 'text'
+grafico_curva_masa <- ggplot(precipitacion, aes(x = date, y = precip_acumulada)) +
+  # Área sombreada bajo la curva masa (group = 1 evita que se fragmente por 'text')
+  geom_area(fill = "#3182bd", alpha = 0.25, group = 1) +
+  # Línea continua de la curva masa
+  geom_line(color = "#08519c", linewidth = 1, group = 1) +
+  # Puntos con la estética 'text' para activar el tooltip en cada observación
+  geom_point(
+    aes(text = etiqueta_tooltip),
+    color = "#08519c",
+    size = 1.2,
+    alpha = 0.8
+  ) +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",
+    expand = c(0.01, 0.01)
+  ) +
+  scale_y_continuous(
+    labels = label_number(suffix = " mm", big.mark = ".", decimal.mark = ","),
+    expand = expansion(mult = c(0, 0.08))
+  ) +
+  labs(
+    title = "Curva Masa de Precipitación Acumulada (CHIRPS 2026)",
+    x = "Fecha",
+    y = "Precipitación Acumulada (mm)", 
+    caption = "Fuente: Datos CHIRPS" ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+
+# 3. Convertir a gráfico interactivo con ggplotly(), en español y sin logo de Plotly
+curva_masa_interactiva <- ggplotly(grafico_curva_masa, tooltip = "text") %>%
+  config(
+    locale = "es",       # Controles en español
+    displaylogo = FALSE  # Sin logotipo de Plotly
+  )
+
+# Mostrar el gráfico interactivo
+curva_masa_interactiva
+```
+
+El grafico corrobora que la precipitación acumulada en Liberia durante el periodo de enero a septiembre de 2026 muestra un incremento constante, con picos que reflejan eventos de lluvia intensa. La curva masa interactiva permite explorar los datos de manera detallada, proporcionando información específica sobre la precipitación diaria y acumulada en cada fecha.
+
+# Referencias Bibliográficas
+
+- Funk, C., Peterson, P., Landsfeld, M., Pedreros, D., Verdin, J., Shukla, S., Husak, G., Rowland, J., Harrison, L., Hoell, A., & Michaelsen, J. (2015). The climate hazards infrared precipitation with stations—a new environmental record for monitoring extremes. *Scientific Data*, 2(1), 1-21. [doi.org](https://doi.org/10.1038/sdata.2015.66)
+
+# Declaración de uso de IA
+
+Se utilizó la herramienta de Inteligencia Artificial Gemini (Google) en 2026-10-26 como apoyo para generar los gráficos en una versión inicial, dado que por el tipo de datos utilizados se tuvo que implementar mejoras en escala de visualización. Se incluyen los comentarios en las secciones donde se conservó el código sin modificar. Los resultados fueron revisados, verificados y adaptados por el autor.
